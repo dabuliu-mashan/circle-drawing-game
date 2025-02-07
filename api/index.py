@@ -10,25 +10,21 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=31)
 
-# 修改数据库配置以支持Vercel环境
-if os.environ.get('VERCEL_ENV') == 'production':
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tmp/game.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    # 确保tmp目录存在
-    os.makedirs('/tmp', exist_ok=True)
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///game.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# 使用内存数据库
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'index'
 
-# 在请求开始前创建数据库表
-@app.before_first_request
-def create_tables():
-    db.create_all()
+# 在每次请求前确保数据库表存在
+@app.before_request
+def before_request():
+    if not hasattr(app, 'db_initialized'):
+        db.create_all()
+        app.db_initialized = True
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
