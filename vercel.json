@@ -6,21 +6,15 @@
             "use": "@vercel/python"
         }
     ],
-    "routes": [
+    "rewrites": [
         {
-            "src": "/(.*)",
-            "dest": "api/index.py"
+            "source": "/(.*)",
+            "destination": "/api/index.py"
         }
     ],
     "env": {
         "PYTHONPATH": ".",
         "FLASK_ENV": "production",
         "FLASK_APP": "api/index.py"
-    },
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/api/index"
-        }
-    ]
+    }
 } 
