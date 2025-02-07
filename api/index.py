@@ -1,25 +1,34 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, current_user, logout_user
 import random
 import string
 import os
+from datetime import timedelta
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=31)
 
 # 修改数据库配置以支持Vercel环境
 if os.environ.get('VERCEL_ENV') == 'production':
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tmp/game.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # 确保tmp目录存在
+    os.makedirs('/tmp', exist_ok=True)
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///game.db')
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'index'
+
+# 在请求开始前创建数据库表
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -94,9 +103,6 @@ def leaderboard():
 def logout():
     logout_user()
     return redirect(url_for('index'))
-
-with app.app_context():
-    db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True) 

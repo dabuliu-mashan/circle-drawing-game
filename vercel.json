@@ -17,5 +17,11 @@
         "FLASK_ENV": "production",
         "FLASK_APP": "api/index.py",
         "VERCEL_ENV": "production"
+    },
+    "functions": {
+        "api/index.py": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
     }
 } 
