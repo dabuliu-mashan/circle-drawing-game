@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画圆挑战</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 30px;
+        }
+        .register-form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>画圆挑战</h1>
+        <div class="register-form">
+            <h2>开始游戏</h2>
+            <div id="error" class="error"></div>
+            <input type="text" id="username" placeholder="输入用户名（可选）">
+            <button onclick="register()">开始游戏</button>
+            <button onclick="generateRandomUsername()">随机用户名</button>
+        </div>
+    </div>
+
+    <script>
+        function generateRandomUsername() {
+            document.getElementById('username').value = '';
+            register();
+        }
+
+        function register() {
+            const username = document.getElementById('username').value;
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `username=${encodeURIComponent(username)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('error').textContent = data.error;
+                } else {
+                    window.location.href = '/game';
+                }
+            })
+            .catch(error => {
+                document.getElementById('error').textContent = '发生错误，请重试';
+            });
+        }
+    </script>
+</body>
+</html> 

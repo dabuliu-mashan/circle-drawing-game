@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>画圆挑战 - 游戏</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            touch-action: none;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        #gameCanvas {
+            border: 2px solid #333;
+            background: white;
+            border-radius: 10px;
+            touch-action: none;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .score {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        #result {
+            font-size: 20px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>画圆挑战</h1>
+        <div class="controls">
+            <button onclick="startDrawing()">开始画圆</button>
+            <button onclick="clearCanvas()">重新开始</button>
+            <button onclick="window.location.href='/leaderboard'">查看排行榜</button>
+        </div>
+        <canvas id="gameCanvas" width="300" height="300"></canvas>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let points = [];
+        let startPoint = null;
+
+        function startDrawing() {
+            clearCanvas();
+            points = [];
+            isDrawing = true;
+            document.getElementById('result').textContent = '开始画圆...';
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            points = [];
+            isDrawing = false;
+            startPoint = null;
+            document.getElementById('result').textContent = '';
+        }
+
+        function calculateCircularity(points) {
+            if (points.length < 3) return 0;
+
+            // 计算中心点
+            let sumX = 0, sumY = 0;
+            points.forEach(p => {
+                sumX += p.x;
+                sumY += p.y;
+            });
+            const centerX = sumX / points.length;
+            const centerY = sumY / points.length;
+
+            // 计算平均半径
+            let sumRadius = 0;
+            points.forEach(p => {
+                const dx = p.x - centerX;
+                const dy = p.y - centerY;
+                sumRadius += Math.sqrt(dx * dx + dy * dy);
+            });
+            const avgRadius = sumRadius / points.length;
+
+            // 计算标准差
+            let sumDeviation = 0;
+            points.forEach(p => {
+                const dx = p.x - centerX;
+                const dy = p.y - centerY;
+                const radius = Math.sqrt(dx * dx + dy * dy);
+                sumDeviation += Math.pow(radius - avgRadius, 2);
+            });
+            const stdDeviation = Math.sqrt(sumDeviation / points.length);
+
+            // 计算圆度分数（0-100）
+            const circularityScore = Math.max(0, 100 - (stdDeviation / avgRadius * 100));
+            return Math.round(circularityScore);
+        }
+
+        function submitScore(score) {
+            fetch('/submit_score', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ score: score })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('result').textContent += '\n分数已提交！';
+                }
+            });
+        }
+
+        function handleStart(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.type === 'mousedown' ? e.clientX - rect.left : e.touches[0].clientX - rect.left;
+            const y = e.type === 'mousedown' ? e.clientY - rect.top : e.touches[0].clientY - rect.top;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            startPoint = {x, y};
+            points.push({x, y});
+        }
+
+        function handleMove(e) {
+            if (!isDrawing || !startPoint) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = e.type === 'mousemove' ? e.clientX - rect.left : e.touches[0].clientX - rect.left;
+            const y = e.type === 'mousemove' ? e.clientY - rect.top : e.touches[0].clientY - rect.top;
+            
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            points.push({x, y});
+        }
+
+        function handleEnd(e) {
+            if (!isDrawing || !startPoint) return;
+            isDrawing = false;
+            
+            // 计算圆度分数
+            const score = calculateCircularity(points);
+            document.getElementById('result').textContent = `圆度评分：${score}分`;
+            submitScore(score);
+        }
+
+        // 鼠标事件
+        canvas.addEventListener('mousedown', handleStart);
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('mouseup', handleEnd);
+        canvas.addEventListener('mouseout', handleEnd);
+
+        // 触摸事件
+        canvas.addEventListener('touchstart', handleStart);
+        canvas.addEventListener('touchmove', handleMove);
+        canvas.addEventListener('touchend', handleEnd);
+
+        // 设置画笔样式
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+    </script>
+</body>
+</html> 

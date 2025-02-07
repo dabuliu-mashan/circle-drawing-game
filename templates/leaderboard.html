@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画圆挑战 - 排行榜</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .leaderboard {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+        .rank {
+            font-weight: bold;
+            font-size: 20px;
+            color: #666;
+            width: 40px;
+        }
+        .username {
+            flex-grow: 1;
+            text-align: left;
+            padding: 0 20px;
+        }
+        .score {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .top-3 {
+            font-size: 24px;
+            color: #1a1a1a;
+        }
+        .top-3 .rank {
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>排行榜</h1>
+        <div class="leaderboard">
+            {% for user in users %}
+            <div class="leaderboard-item {% if loop.index <= 3 %}top-3{% endif %}">
+                <span class="rank">{{ loop.index }}</span>
+                <span class="username">{{ user.username }}</span>
+                <span class="score">{{ "%.1f"|format(user.best_score) }}分</span>
+            </div>
+            {% endfor %}
+        </div>
+        <button onclick="window.location.href='/game'">返回游戏</button>
+    </div>
+</body>
+</html> 
