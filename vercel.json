@@ -15,6 +15,7 @@
     "env": {
         "PYTHONPATH": ".",
         "FLASK_ENV": "production",
-        "FLASK_APP": "api/index.py"
+        "FLASK_APP": "api/index.py",
+        "VERCEL_ENV": "production"
     }
 } 
